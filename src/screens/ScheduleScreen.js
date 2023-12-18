@@ -21,6 +21,8 @@ const ScheduleScreen = () => {
     dueDate: new Date(),
     completed: false,
   });
+  const [taskViewModalVisible, setTaskViewModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const addTask = () => {
     setTasks([...tasks, { ...newTask, id: tasks.length + 1 }]);
@@ -72,11 +74,16 @@ const ScheduleScreen = () => {
   };
 
   const truncateDescription = (description) => {
-    if (description.length > 15) {
-      return description.substring(0, 15) + '...';
+    if (description.length > 30) {
+      return description.substring(0, 30) + "...";
     } else {
       return description;
     }
+  };
+
+  const openTaskViewModal = (task) => {
+    setSelectedTask(task);
+    setTaskViewModalVisible(true);
   };
 
   const renderTask = (task) => (
@@ -90,18 +97,24 @@ const ScheduleScreen = () => {
         </TouchableOpacity>
       )}
     >
-      <View style={styles.taskItem}>
-        <Text
-          style={[styles.taskText, task.completed && styles.completedTaskText]}
-        >
-          {task.title}
-        </Text>
-        <Text>{truncateDescription(task.description)}</Text>
+      <TouchableOpacity
+        style={styles.taskItem}
+        onPress={() => openTaskViewModal(task)}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.taskText, task.completed && styles.completedTaskText]}>
+            {task.title}
+          </Text>
+          <Text>{truncateDescription(task.description)}</Text>
+        </View>
         <Button
           title={task.completed ? "Uncheck" : "Check"}
-          onPress={() => toggleTaskCompletion(task.id)}
+          onPress={(e) => {
+            e.stopPropagation(); // Prevents the modal from opening when the button is pressed
+            toggleTaskCompletion(task.id);
+          }}
         />
-      </View>
+      </TouchableOpacity>
     </Swipeable>
   );
 
@@ -122,21 +135,23 @@ const ScheduleScreen = () => {
       <FlatList
         data={Object.entries(groupedTasks)}
         renderItem={renderTaskGroup}
-        keyExtractor={item => item[0]}
+        keyExtractor={(item) => item[0]}
       />
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalView}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
             <TextInput
               style={styles.input}
               placeholder="Title"
               value={newTask.title}
+              placeholderTextColor="black"
               onChangeText={(text) => setNewTask({ ...newTask, title: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Description"
               value={newTask.description}
+              placeholderTextColor="black"
               onChangeText={(text) =>
                 setNewTask({ ...newTask, description: text })
               }
@@ -153,6 +168,22 @@ const ScheduleScreen = () => {
               }}
             />
             <Button title="Create" onPress={addTask} />
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={taskViewModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setTaskViewModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Task Details</Text>
+            <Text style={styles.modalText}>Title: {selectedTask?.title}</Text>
+            <Text style={styles.modalText}>Description: {selectedTask?.description}</Text>
+            <Text style={styles.modalText}>Due Date: {selectedTask?.dueDate.toDateString()}</Text>
+            <Button title="Close" onPress={() => setTaskViewModalVisible(false)} />
           </View>
         </View>
       </Modal>
@@ -241,8 +272,17 @@ const styles = StyleSheet.create({
   },
   dateHeader: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     paddingVertical: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 5,
   },
 });
 
