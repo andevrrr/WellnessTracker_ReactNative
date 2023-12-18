@@ -9,7 +9,7 @@ const WeatherWidget = () => {
   const [errorMsg, setErrorMsg] = useState(null);
 
   const screenWidth = Dimensions.get("window").width;
-  const widgetSize = screenWidth / 2 - 20;
+  const widgetSize = screenWidth / 2 - 40;
 
   const styles = StyleSheet.create({
     widgetContainer: {
