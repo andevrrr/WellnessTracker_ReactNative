@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Swipeable } from "react-native-gesture-handler";
+import * as FileSystem from 'expo-file-system';
 
 const ScheduleScreen = () => {
   const [tasks, setTasks] = useState([]);
@@ -24,8 +25,47 @@ const ScheduleScreen = () => {
   const [taskViewModalVisible, setTaskViewModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  const addTask = () => {
-    setTasks([...tasks, { ...newTask, id: tasks.length + 1 }]);
+  const tasksFilePath = FileSystem.documentDirectory + 'tasks.json';
+
+  const saveTasksToFile = async (tasks) => {
+    try {
+      await FileSystem.writeAsStringAsync(tasksFilePath, JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Failed to write tasks:", error);
+    }
+  };
+
+  const loadTasksFromFile = async () => {
+    try {
+      const tasksJson = await FileSystem.readAsStringAsync(tasksFilePath);
+      const loadedTasks = JSON.parse(tasksJson);
+
+      loadedTasks.forEach(task => {
+        if (task.dueDate) {
+          task.dueDate = new Date(task.dueDate);
+        }
+      });
+
+      return loadedTasks;
+    } catch (error) {
+      console.error("Failed to read tasks:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      const loadedTasks = await loadTasksFromFile();
+      setTasks(loadedTasks);
+    };
+
+    loadTasks();
+  }, []);
+
+  const addTask = async () => {
+    const newTasks = [...tasks, { ...newTask, id: tasks.length + 1 }];
+    setTasks(newTasks);
+    await saveTasksToFile(newTasks);
     setNewTask({
       title: "",
       description: "",
@@ -35,7 +75,7 @@ const ScheduleScreen = () => {
     setModalVisible(false);
   };
 
-  const toggleTaskCompletion = (id) => {
+  const toggleTaskCompletion = async (id) => {
     const updatedTasks = tasks.map((task) => {
       if (task.id === id) {
         return { ...task, completed: !task.completed };
@@ -43,24 +83,36 @@ const ScheduleScreen = () => {
       return task;
     });
     setTasks(updatedTasks);
+    await saveTasksToFile(updatedTasks);
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const deleteTask = async (id) => {
+    const updatedTasks = tasks.filter((task) => task.id !== id);
+    setTasks(updatedTasks);
+    await saveTasksToFile(updatedTasks);
   };
 
   const groupTasksByDueDate = (tasks) => {
     const grouped = {};
-    tasks.forEach((task) => {
-      const dueDate = task.dueDate.toISOString().split("T")[0];
-      if (!grouped[dueDate]) {
-        grouped[dueDate] = [];
-      }
-      grouped[dueDate].push(task);
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    tasks
+      .filter(task => new Date(task.dueDate) >= today) 
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .forEach(task => {
+        const dueDate = task.dueDate.toISOString().split("T")[0];
+        if (!grouped[dueDate]) {
+          grouped[dueDate] = [];
+        }
+        grouped[dueDate].push(task);
+      });
+
     return grouped;
   };
+
   const groupedTasks = groupTasksByDueDate(tasks);
+
   const renderTaskGroup = ({ item }) => {
     const [date, tasks] = item;
     return (
@@ -102,7 +154,12 @@ const ScheduleScreen = () => {
         onPress={() => openTaskViewModal(task)}
       >
         <View style={{ flex: 1 }}>
-          <Text style={[styles.taskText, task.completed && styles.completedTaskText]}>
+          <Text
+            style={[
+              styles.taskText,
+              task.completed && styles.completedTaskText,
+            ]}
+          >
             {task.title}
           </Text>
           <Text>{truncateDescription(task.description)}</Text>
@@ -181,9 +238,16 @@ const ScheduleScreen = () => {
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>Task Details</Text>
             <Text style={styles.modalText}>Title: {selectedTask?.title}</Text>
-            <Text style={styles.modalText}>Description: {selectedTask?.description}</Text>
-            <Text style={styles.modalText}>Due Date: {selectedTask?.dueDate.toDateString()}</Text>
-            <Button title="Close" onPress={() => setTaskViewModalVisible(false)} />
+            <Text style={styles.modalText}>
+              Description: {selectedTask?.description}
+            </Text>
+            <Text style={styles.modalText}>
+              Due Date: {selectedTask?.dueDate.toDateString()}
+            </Text>
+            <Button
+              title="Close"
+              onPress={() => setTaskViewModalVisible(false)}
+            />
           </View>
         </View>
       </Modal>
@@ -277,7 +341,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   modalText: {

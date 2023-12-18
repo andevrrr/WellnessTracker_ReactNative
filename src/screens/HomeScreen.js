@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ScrollView } from 'react-native';
 import WeatherWidget from '../components/WeatherWidget';
 import StepsWidget from '../components/StepsWidget';
-// import ScheduleWidget from '../components/ScheduleWidget';
+import ScheduleWidget from '../components/ScheduleWidget';
 // import TasksWidget from '../components/TasksWidget';
 
 const HomeScreen = () => (
@@ -10,6 +10,9 @@ const HomeScreen = () => (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 30 }}>
       <WeatherWidget />
       <StepsWidget />
+    </View>
+    <View style={{ paddingLeft: 30, paddingRight: 30 }}>
+    <ScheduleWidget />
     </View>
   </ScrollView>
 );

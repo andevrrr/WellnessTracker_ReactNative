@@ -2,7 +2,6 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
-import SettingsScreen from '../screens/SettingsScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { View } from 'react-native';
 
@@ -19,8 +18,6 @@ const TabNavigator = () => (
           iconName = focused ? 'home' : 'home-outline';
         } else if (route.name === 'Schedule') {
           iconName = focused ? 'calendar' : 'calendar-outline';
-        } else if (route.name === 'Settings') {
-          iconName = focused ? 'settings' : 'settings-outline';
         }
 
         return (
@@ -52,7 +49,6 @@ const TabNavigator = () => (
   >
     <Tab.Screen name="Home" component={HomeScreen} />
     <Tab.Screen name="Schedule" component={ScheduleScreen} />
-    <Tab.Screen name="Settings" component={SettingsScreen} />
   </Tab.Navigator>
 );
 
