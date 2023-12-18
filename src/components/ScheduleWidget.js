@@ -1,31 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Button } from "react-native";
 import * as FileSystem from "expo-file-system";
 
 const ScheduleWidget = () => {
-  const [tasks, setTasks] = useState([]);
+    const [tasks, setTasks] = useState([]);
+    const [refresh, setRefresh] = useState(false);
+
+  const tasksFilePath = FileSystem.documentDirectory + "tasks.json";
+
+  const loadTasksFromFile = async () => {
+    try {
+      const tasksJson = await FileSystem.readAsStringAsync(tasksFilePath);
+      const loadedTasks = JSON.parse(tasksJson);
+      loadedTasks.forEach((task) => {
+        if (task.dueDate) {
+          task.dueDate = new Date(task.dueDate);
+        }
+      });
+      setTasks(loadedTasks);
+    } catch (error) {
+      console.error("Failed to read tasks:", error);
+      setTasks([]);
+    }
+  };
 
   useEffect(() => {
-    const tasksFilePath = FileSystem.documentDirectory + "tasks.json";
-
-    const loadTasksFromFile = async () => {
-      try {
-        const tasksJson = await FileSystem.readAsStringAsync(tasksFilePath);
-        const loadedTasks = JSON.parse(tasksJson);
-        loadedTasks.forEach((task) => {
-          if (task.dueDate) {
-            task.dueDate = new Date(task.dueDate);
-          }
-        });
-        setTasks(loadedTasks);
-      } catch (error) {
-        console.error("Failed to read tasks:", error);
-        setTasks([]);
-      }
-    };
-
     loadTasksFromFile();
-  }, []);
+  }, [refresh]);
+
+  const handleRefresh = () => {
+    setRefresh(!refresh);
+  };
+
   const getUpcomingTasks = () => {
     return tasks
       .filter((task) => new Date(task.dueDate) >= new Date())
@@ -55,6 +61,7 @@ const ScheduleWidget = () => {
         ) : (
           <Text style={styles.taskText}>No upcoming tasks</Text>
         )}
+        <Button title="Refresh Tasks" onPress={handleRefresh} />
       </View>
     </View>
   );

@@ -11,7 +11,8 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Swipeable } from "react-native-gesture-handler";
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from "expo-file-system";
+import { Platform } from "react-native";
 
 const ScheduleScreen = () => {
   const [tasks, setTasks] = useState([]);
@@ -24,8 +25,22 @@ const ScheduleScreen = () => {
   });
   const [taskViewModalVisible, setTaskViewModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
-  const tasksFilePath = FileSystem.documentDirectory + 'tasks.json';
+  const tasksFilePath = FileSystem.documentDirectory + "tasks.json";
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+  const openDatePickerForAndroid = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || newTask.dueDate;
+    setDatePickerVisibility(Platform.OS === "ios");
+    setNewTask({ ...newTask, dueDate: currentDate });
+  };
 
   const saveTasksToFile = async (tasks) => {
     try {
@@ -40,7 +55,7 @@ const ScheduleScreen = () => {
       const tasksJson = await FileSystem.readAsStringAsync(tasksFilePath);
       const loadedTasks = JSON.parse(tasksJson);
 
-      loadedTasks.forEach(task => {
+      loadedTasks.forEach((task) => {
         if (task.dueDate) {
           task.dueDate = new Date(task.dueDate);
         }
@@ -98,9 +113,9 @@ const ScheduleScreen = () => {
     today.setHours(0, 0, 0, 0);
 
     tasks
-      .filter(task => new Date(task.dueDate) >= today) 
+      .filter((task) => new Date(task.dueDate) >= today)
       .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-      .forEach(task => {
+      .forEach((task) => {
         const dueDate = task.dueDate.toISOString().split("T")[0];
         if (!grouped[dueDate]) {
           grouped[dueDate] = [];
@@ -167,7 +182,7 @@ const ScheduleScreen = () => {
         <Button
           title={task.completed ? "Uncheck" : "Check"}
           onPress={(e) => {
-            e.stopPropagation(); // Prevents the modal from opening when the button is pressed
+            e.stopPropagation(); 
             toggleTaskCompletion(task.id);
           }}
         />
@@ -177,8 +192,7 @@ const ScheduleScreen = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    // Format the date as needed, e.g., 'October 15th'
-    return date.toDateString(); // Simple example, customize as needed
+    return date.toDateString();
   };
 
   return (
@@ -213,21 +227,31 @@ const ScheduleScreen = () => {
                 setNewTask({ ...newTask, description: text })
               }
             />
-            <DateTimePicker
-              value={newTask.dueDate}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setNewTask({
-                  ...newTask,
-                  dueDate: selectedDate || newTask.dueDate,
-                });
-              }}
-            />
+            {Platform.OS === "ios" ? (
+              <DateTimePicker
+                value={newTask.dueDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            ) : (
+              <Button title="Select Date" onPress={showDatePicker} />
+            )}
             <Button title="Create" onPress={addTask} />
           </View>
         </View>
       </Modal>
+      {Platform.OS === 'android' && isDatePickerVisible && (
+        <DateTimePicker
+          value={newTask.dueDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setDatePickerVisibility(false);
+            handleDateChange(event, selectedDate);
+          }}
+        />
+      )}
       <Modal
         visible={taskViewModalVisible}
         animationType="slide"

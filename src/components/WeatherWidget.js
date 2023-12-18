@@ -38,17 +38,7 @@ const WeatherWidget = () => {
     temperatureText: {
       fontSize: 30,
       color: "black",
-    },
-    conditionImage: {
-      position: "absolute",
-      top: 10,
-      right: 10,
-      width: 50,
-      height: 50,
-      borderColor: "#7F5DF0",
-      borderWidth: 2,
-      borderRadius: 25,
-    },
+    }
   });
 
   useEffect(() => {
@@ -109,10 +99,6 @@ const WeatherWidget = () => {
         <Text style={styles.cityText}>{weather.city}</Text>
         <Text style={styles.temperatureText}>{`${weather.temperature}°C`}</Text>
       </View>
-      {/* <Image
-        style={styles.conditionImage}
-        source={{ uri: conditionImageSource }} // replace with your image source
-      /> */}
     </View>
   );
 };
