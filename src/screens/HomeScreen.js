@@ -1,10 +1,18 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, ScrollView } from 'react-native';
+import WeatherWidget from '../components/WeatherWidget';
+import StepsWidget from '../components/StepsWidget';
+// import ScheduleWidget from '../components/ScheduleWidget';
+// import TasksWidget from '../components/TasksWidget';
 
 const HomeScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Home Screen</Text>
-  </View>
+  <ScrollView style={{ flex: 1 }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
+      <WeatherWidget />
+      <StepsWidget />
+    </View>
+  </ScrollView>
 );
 
 export default HomeScreen;
+
