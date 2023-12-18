@@ -21,14 +21,21 @@ const StepsWidget = () => {
       shadowOpacity: 0.25,
       shadowRadius: 3.5,
       elevation: 5,
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "black",
       justifyContent: "center",
-      alignItems: "center",
     },
     stepsText: {
-      fontSize: 30,
+      fontSize: 20,
       fontWeight: "bold",
       color: "black",
     },
+    steps: {
+        fontSize: 50,
+      fontWeight: "bold",
+      color: "black",
+    }
   });
 
   useEffect(() => {
@@ -58,7 +65,9 @@ const StepsWidget = () => {
 
   return (
     <View style={styles.widgetContainer}>
-      <Text style={styles.stepsText}>{`Steps ${steps}`}</Text>
+      <Text>Today</Text>
+      <Text style={styles.stepsText}>Steps</Text>
+      <Text style={styles.steps}>{steps}</Text>
     </View>
   );
 };
